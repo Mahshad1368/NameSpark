@@ -58,13 +58,13 @@ export default function Home() {
   }
 
   return (
-    <main className="flex min-h-screen items-start justify-center bg-white px-4 py-12">
-      <div className="w-full max-w-xl rounded-lg border border-neutral-200 bg-white p-6">
-        <h1 className="text-center text-3xl font-semibold text-neutral-900">
+    <main className="flex min-h-screen items-start justify-center bg-[#fbf6ee] px-4 py-12 sm:py-16">
+      <div className="w-full max-w-lg rounded-2xl border border-[#eadfce] bg-white p-6 shadow-[0_18px_50px_rgba(120,82,45,0.12)] sm:p-8">
+        <h1 className="text-center text-4xl font-semibold tracking-tight text-[#2b2118]">
           Name Generator
         </h1>
 
-        <div className="mt-8 flex gap-2">
+        <div className="mt-8 flex gap-3">
           <input
             value={input}
             onChange={(event) => setInput(event.target.value)}
@@ -74,12 +74,12 @@ export default function Home() {
               }
             }}
             placeholder="Enter a keyword"
-            className="min-w-0 flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-700"
+            className="min-w-0 flex-1 rounded-xl border border-[#decfba] bg-[#fffdf9] px-4 py-3 text-base text-[#2b2118] outline-none placeholder:text-[#9d8f7f] focus:border-[#c87943] focus:ring-4 focus:ring-[#c87943]/15"
           />
           <button
             type="button"
             onClick={addKeyword}
-            className="rounded-md border border-neutral-900 px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-100"
+            className="rounded-xl bg-[#c87943] px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#a95f31] focus:outline-none focus:ring-4 focus:ring-[#c87943]/20"
           >
             Add
           </button>
@@ -92,7 +92,7 @@ export default function Home() {
                 key={keyword}
                 type="button"
                 onClick={() => removeKeyword(keyword)}
-                className="rounded-full border border-neutral-300 px-3 py-1 text-sm text-neutral-700 hover:bg-neutral-100"
+                className="rounded-full border border-[#decfba] bg-[#fffaf2] px-3 py-1.5 text-sm font-medium text-[#6e5b47] hover:border-[#c87943] hover:bg-[#fff1df]"
               >
                 {keyword} <span aria-hidden="true">×</span>
               </button>
@@ -103,19 +103,22 @@ export default function Home() {
         <button
           type="button"
           onClick={generateIdeas}
-          className="mt-6 w-full rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700"
+          className="mt-7 w-full rounded-xl bg-[#2b2118] px-4 py-3 text-base font-semibold text-white shadow-sm hover:bg-[#493727] focus:outline-none focus:ring-4 focus:ring-[#2b2118]/15"
         >
           Generate
         </button>
 
-        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-4 text-sm font-medium text-[#b33b2e]">{error}</p>}
 
         {ideas.length > 0 && (
-          <div className="mt-6">
-            <h2 className="text-lg font-medium text-neutral-900">Generated names</h2>
-            <ul className="mt-3 space-y-2">
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold text-[#2b2118]">Generated names</h2>
+            <ul className="mt-4 flex flex-wrap gap-3">
               {ideas.map((idea) => (
-                <li key={idea} className="rounded-md border border-neutral-200 px-3 py-2 text-sm">
+                <li
+                  key={idea}
+                  className="cursor-pointer rounded-full border border-[#efd9c4] bg-[#fff7ec] px-4 py-2 text-sm font-semibold text-[#6d4328] shadow-sm hover:border-[#c87943] hover:bg-[#ffefd9]"
+                >
                   {idea}
                 </li>
               ))}
