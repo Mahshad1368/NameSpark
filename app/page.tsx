@@ -1,114 +1,127 @@
 "use client";
 
 import { useState } from "react";
-import { Header } from "@/components/Header";
-import { Hero } from "@/components/Hero";
-import { HowItWorks } from "@/components/HowItWorks";
-import { NameCard } from "@/components/NameCard";
-import { SavedNames } from "@/components/SavedNames";
-import { generateNames, type NameIdea, type NameType } from "@/lib/nameGenerator";
+
+function createNameIdeas(keywords: string[]) {
+  const endings = ["ly", "Hub", "Co", "Works", "Nest", "Lab", "Base", "Flow", "Spark", "Point"];
+
+  return Array.from({ length: 10 }, (_, index) => {
+    const keyword = keywords[index % keywords.length];
+    const cleanKeyword = keyword
+      .trim()
+      .replace(/[^a-zA-Z0-9 ]/g, "")
+      .split(" ")
+      .filter(Boolean)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join("");
+
+    return `${cleanKeyword}${endings[index]}`;
+  });
+}
 
 export default function Home() {
-  const [ideas, setIdeas] = useState<NameIdea[]>([]);
-  const [savedNames, setSavedNames] = useState<NameIdea[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [input, setInput] = useState("");
+  const [keywords, setKeywords] = useState<string[]>([]);
+  const [ideas, setIdeas] = useState<string[]>([]);
   const [error, setError] = useState("");
 
-  function handleGenerate(keywords: string, type: NameType) {
-    if (!keywords.trim()) {
-      setError("Enter a few keywords first.");
+  function addKeyword() {
+    const trimmedInput = input.trim();
+
+    if (!trimmedInput) {
+      return;
+    }
+
+    if (!keywords.includes(trimmedInput)) {
+      setKeywords((currentKeywords) => [...currentKeywords, trimmedInput]);
+    }
+
+    setInput("");
+    setError("");
+  }
+
+  function removeKeyword(keyword: string) {
+    setKeywords((currentKeywords) =>
+      currentKeywords.filter((currentKeyword) => currentKeyword !== keyword),
+    );
+  }
+
+  function generateIdeas() {
+    if (keywords.length === 0) {
+      setError("Please add at least one keyword.");
+      setIdeas([]);
       return;
     }
 
     setError("");
-    setIsLoading(true);
-
-    window.setTimeout(() => {
-      setIdeas(generateNames(keywords, type));
-      setIsLoading(false);
-    }, 1000);
-  }
-
-  function handleSave(idea: NameIdea) {
-    setSavedNames((current) => {
-      if (current.some((saved) => saved.name === idea.name)) {
-        return current;
-      }
-
-      return [idea, ...current];
-    });
-  }
-
-  function handleRemoveSaved(name: string) {
-    setSavedNames((current) => current.filter((saved) => saved.name !== name));
+    setIdeas(createNameIdeas(keywords));
   }
 
   return (
-    <main className="min-h-screen overflow-hidden px-4 py-4 sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-9">
-        <Header />
-        <Hero onGenerate={handleGenerate} error={error} isLoading={isLoading} />
-        <HowItWorks />
+    <main className="flex min-h-screen items-start justify-center bg-white px-4 py-12">
+      <div className="w-full max-w-xl rounded-lg border border-neutral-200 bg-white p-6">
+        <h1 className="text-center text-3xl font-semibold text-neutral-900">
+          Name Generator
+        </h1>
 
-        <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="rounded-lg border border-black/10 bg-white/82 p-4 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.07] sm:p-6">
-            <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-basil dark:text-citron">
-                  Results
-                </p>
-                <h2 className="text-2xl font-semibold text-ink dark:text-white">
-                  Generated names
-                </h2>
-              </div>
-              {ideas.length > 0 && (
-                <p className="text-sm text-black/55 dark:text-white/55">
-                  {ideas.length} ideas ready
-                </p>
-              )}
-            </div>
+        <div className="mt-8 flex gap-2">
+          <input
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                addKeyword();
+              }
+            }}
+            placeholder="Enter a keyword"
+            className="min-w-0 flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-700"
+          />
+          <button
+            type="button"
+            onClick={addKeyword}
+            className="rounded-md border border-neutral-900 px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-100"
+          >
+            Add
+          </button>
+        </div>
 
-            {isLoading ? (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {Array.from({ length: 6 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="h-48 animate-pulse rounded-lg border border-black/10 bg-black/[0.04] dark:border-white/10 dark:bg-white/[0.06]"
-                  />
-                ))}
-              </div>
-            ) : ideas.length > 0 ? (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {ideas.map((idea, index) => (
-                  <NameCard
-                    key={idea.name}
-                    idea={idea}
-                    index={index}
-                    isSaved={savedNames.some((saved) => saved.name === idea.name)}
-                    onSave={handleSave}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="flex min-h-72 items-center justify-center rounded-lg border border-dashed border-black/15 bg-black/[0.02] p-8 text-center dark:border-white/15 dark:bg-white/[0.03]">
-                <div className="max-w-sm">
-                  <div className="mx-auto mb-5 grid size-12 place-items-center rounded-lg bg-citron text-lg font-black text-ink">
-                    N
-                  </div>
-                  <h3 className="text-2xl font-semibold text-ink dark:text-white">
-                    Your name ideas will appear here.
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-black/60 dark:text-white/60">
-                    Add keywords like cozy finance, clean analytics, or pet care and
-                    NameSpark will shape them into polished options.
-                  </p>
-                </div>
-              </div>
-            )}
+        {keywords.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {keywords.map((keyword) => (
+              <button
+                key={keyword}
+                type="button"
+                onClick={() => removeKeyword(keyword)}
+                className="rounded-full border border-neutral-300 px-3 py-1 text-sm text-neutral-700 hover:bg-neutral-100"
+              >
+                {keyword} <span aria-hidden="true">×</span>
+              </button>
+            ))}
           </div>
+        )}
 
-          <SavedNames names={savedNames} onRemove={handleRemoveSaved} />
-        </section>
+        <button
+          type="button"
+          onClick={generateIdeas}
+          className="mt-6 w-full rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700"
+        >
+          Generate
+        </button>
+
+        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+
+        {ideas.length > 0 && (
+          <div className="mt-6">
+            <h2 className="text-lg font-medium text-neutral-900">Generated names</h2>
+            <ul className="mt-3 space-y-2">
+              {ideas.map((idea) => (
+                <li key={idea} className="rounded-md border border-neutral-200 px-3 py-2 text-sm">
+                  {idea}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </main>
   );
