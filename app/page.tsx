@@ -57,10 +57,6 @@ function randomItem<T>(items: T[]) {
   return items[Math.floor(Math.random() * items.length)];
 }
 
-function shuffle<T>(items: T[]) {
-  return [...items].sort(() => Math.random() - 0.5);
-}
-
 function blendWords(firstWord: string, secondWord: string) {
   const first = titleCase(firstWord);
   const second = titleCase(secondWord);
@@ -98,19 +94,6 @@ function hasAwkwardPattern(name: string) {
   return repeatsItself || /([bcdfghjklmnpqrstvwxyz]{5,}|[aeiou]{4,}|(.)\2{3,})/i.test(name);
 }
 
-function scoreName(name: string) {
-  let score = 80;
-
-  if (name.length <= 8) score += 16;
-  if (name.length > 12) score -= (name.length - 12) * 8;
-  if (/^[A-Z][a-z]+[A-Z][a-z]+$/.test(name)) score += 8;
-  if (/[qxz]/i.test(name)) score += 4;
-  if (hasAwkwardPattern(name)) score -= 35;
-  if (/(Hub|Base|Works|Company)$/i.test(name)) score -= 40;
-
-  return score + Math.random() * 18;
-}
-
 function cleanName(name: string) {
   return name.replace(/[^a-zA-Z0-9]/g, "").replace(/\s+/g, "");
 }
@@ -128,7 +111,7 @@ function normalizeName(name: string) {
 }
 
 function isGoodName(name: string) {
-  return name.length >= 4 && name.length <= 16 && !hasAwkwardPattern(name);
+  return name.length >= 4 && name.length <= 14 && !hasAwkwardPattern(name);
 }
 
 function generateRandomCombination(words: string[], related: string[], style: NamingStyle) {
@@ -172,54 +155,33 @@ function createNameIdeas(keywords: string[]) {
   const brandWords = [...new Set([...stemmedWords, ...related])];
   const baseWords = brandWords.length > 0 ? brandWords : ["Name"];
   const styles: NamingStyle[] = ["modern", "tech", "premium", "playful", "minimal"];
-  const candidates = new Set<string>();
+  const ideas: string[] = [];
 
-  baseWords.forEach((word) => {
-    candidates.add(withEnding(word, randomItem(["ly", "nova", "zen", "spark", "mind"])));
-    candidates.add(joinName(word, randomItem(related.length > 0 ? related : baseWords)));
-  });
+  function addIdea(name: string) {
+    const cleanIdea = normalizeName(name);
 
-  shuffle(baseWords).forEach((word, index) => {
-    const nextWord = baseWords[(index + 1) % baseWords.length] ?? word;
-
-    candidates.add(blendWords(word, nextWord));
-    candidates.add(blendWords(nextWord, word));
-  });
-
-  for (let index = 0; index < 72; index += 1) {
-    candidates.add(generateRandomCombination(baseWords, related, randomItem(styles)));
+    if (isGoodName(cleanIdea) && !ideas.includes(cleanIdea)) {
+      ideas.push(cleanIdea);
+    }
   }
 
-  const bestNames = Array.from(candidates)
-    .map(normalizeName)
-    .filter((name, index, names) => names.indexOf(name) === index)
-    .filter(isGoodName)
-    .map((name) => ({ name, score: scoreName(name) }))
-    .sort((firstName, secondName) => secondName.score - firstName.score)
-    .map(({ name }) => name)
-    .slice(0, 12);
+  baseWords.forEach((word, index) => {
+    const nextWord = baseWords[(index + 1) % baseWords.length] ?? word;
 
-  creativeEndings.forEach((ending, index) => {
-    if (bestNames.length < 12) {
-      const fallbackName = withEnding(baseWords[index % baseWords.length], ending);
-
-      if (!bestNames.includes(fallbackName) && isGoodName(fallbackName)) {
-        bestNames.push(fallbackName);
-      }
-    }
+    addIdea(withEnding(word, randomItem(["ly", "nova", "zen", "spark", "mind", "enix"])));
+    addIdea(joinName(word, randomItem(related.length > 0 ? related : baseWords)));
+    addIdea(blendWords(word, nextWord));
   });
 
-  modernPrefixes.forEach((prefix, index) => {
-    if (bestNames.length < 12) {
-      const fallbackName = joinName(prefix, baseWords[index % baseWords.length]);
+  for (let index = 0; index < 80 && ideas.length < 12; index += 1) {
+    addIdea(generateRandomCombination(baseWords, related, randomItem(styles)));
+  }
 
-      if (!bestNames.includes(fallbackName) && isGoodName(fallbackName)) {
-        bestNames.push(fallbackName);
-      }
-    }
-  });
+  for (let index = 0; index < creativeEndings.length && ideas.length < 12; index += 1) {
+    addIdea(withEnding(baseWords[index % baseWords.length], creativeEndings[index]));
+  }
 
-  return bestNames.slice(0, 12);
+  return ideas.slice(0, 12);
 }
 
 export default function Home() {
