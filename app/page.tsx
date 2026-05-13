@@ -2,30 +2,45 @@
 
 import { useState } from "react";
 
-const creativeEndings = ["ly", "io", "ai", "flow", "mind", "nest", "spark", "lab", "fox", "pulse", "vibe", "nova", "zen", "iq", "rix", "exa", "ora", "tix", "enix", "mora"];
-const modernPrefixes = ["Nova", "Velo", "Nexa", "Luma", "Zeno", "Mora", "Astra"];
+type Category = "pets" | "productivity" | "coffee" | "health" | "business" | "general";
+type NamingStyle = "blend" | "premium" | "minimal" | "future" | "emotional" | "playful" | "startup";
 
-const relatedWords: Record<string, string[]> = {
-  ai: ["Mind", "Nova", "Pilot"],
-  coffee: ["Bean", "Roast", "Brew"],
-  dog: ["Paw", "Wag", "Pack"],
-  fitness: ["Fit", "Flex", "Pulse"],
-  note: ["Memo", "Mind", "Page"],
-  notes: ["Memo", "Mind", "Page"],
-  pet: ["Paw", "Nest", "Buddy"],
-  smart: ["Bright", "Pilot", "Nova"],
-  trainer: ["Train", "Coach", "Pilot"],
-  training: ["Train", "Coach", "Pilot"],
+const categorySignals: Record<Category, string[]> = {
+  pets: ["dog", "puppy", "pup", "pet", "paw", "bark", "tail", "trainer", "training", "leash"],
+  productivity: ["ai", "note", "notes", "focus", "memo", "productivity", "think", "task", "sync"],
+  coffee: ["coffee", "bean", "beans", "brew", "roast", "espresso", "cup", "cafe"],
+  health: ["fitness", "fit", "gym", "health", "workout", "run", "wellness", "yoga"],
+  business: ["finance", "money", "bank", "wealth", "cash", "business", "market", "fund"],
+  general: [],
 };
 
-const stems: Record<string, string> = {
-  dog: "Dog",
-  smart: "Smart",
-  trainer: "Train",
-  training: "Train",
+const semanticBanks: Record<Category, string[]> = {
+  pets: ["paw", "bark", "tail", "pup", "calm", "trust", "guide", "leash", "buddy", "wag", "bond", "pack"],
+  productivity: ["mind", "memo", "clarity", "think", "sync", "focus", "flow", "logic", "pulse", "bright", "notion"],
+  coffee: ["brew", "roast", "aroma", "bean", "cozy", "cup", "warm", "steam", "crema", "daily", "mellow"],
+  health: ["fit", "pulse", "vital", "flex", "core", "lift", "move", "boost", "tone", "stride", "peak"],
+  business: ["coin", "capital", "ledger", "wealth", "vault", "trust", "margin", "fund", "bloom", "rise"],
+  general: ["nova", "luma", "mora", "zen", "nexa", "vibe", "clear", "spark", "orbit", "kind", "bright"],
 };
 
-type NamingStyle = "modern" | "tech" | "premium" | "playful" | "minimal";
+const styleParts: Record<NamingStyle, string[]> = {
+  blend: ["ora", "via", "io", "iq", "ly", "exa", "rix", "tix"],
+  premium: ["luxe", "mora", "aura", "alto", "prime", "velvet"],
+  minimal: ["one", "co", "go", "up", "now"],
+  future: ["nexa", "nova", "zen", "logic", "signal", "matrix"],
+  emotional: ["calm", "bond", "kind", "warm", "bright", "true"],
+  playful: ["poppy", "buddy", "fox", "wag", "bloom", "vibe"],
+  startup: ["ly", "io", "iq", "exa", "ora", "pulse"],
+};
+
+const stemMap: Record<string, string> = {
+  puppy: "pup",
+  trainer: "train",
+  training: "train",
+  notes: "note",
+  fitness: "fit",
+  money: "coin",
+};
 
 function titleCase(word: string) {
   return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
@@ -36,12 +51,30 @@ function cleanKeywords(keywords: string[]) {
     .flatMap((keyword) => keyword.split(/\s+/))
     .map((word) => word.replace(/[^a-zA-Z0-9]/g, ""))
     .filter(Boolean)
-    .map(titleCase);
+    .map((word) => word.toLowerCase());
+}
+
+function detectCategory(words: string[]): Category {
+  const scores = Object.entries(categorySignals).map(([category, signals]) => ({
+    category: category as Category,
+    score: words.filter((word) => signals.includes(word)).length,
+  }));
+  const bestCategory = scores.sort((first, second) => second.score - first.score)[0];
+
+  return bestCategory.score > 0 ? bestCategory.category : "general";
+}
+
+function getSemanticWords(category: Category, words: string[]) {
+  const directWords = words.map((word) => stemMap[word] ?? word);
+  const bankWords = semanticBanks[category];
+  const modernFlavor = shuffle(semanticBanks.general).slice(0, 4);
+
+  return Array.from(new Set([...directWords, ...bankWords, ...modernFlavor]));
 }
 
 function splitWord(word: string) {
-  const cleanWord = titleCase(word);
-  const vowelIndex = cleanWord.slice(1).search(/[aeiouy]/i);
+  const cleanWord = word.toLowerCase();
+  const vowelIndex = cleanWord.slice(1).search(/[aeiouy]/);
   const naturalMiddle = vowelIndex >= 0 ? vowelIndex + 2 : Math.ceil(cleanWord.length / 2);
   const middle = Math.max(2, Math.min(cleanWord.length - 1, naturalMiddle));
 
@@ -57,33 +90,35 @@ function randomItem<T>(items: T[]) {
   return items[Math.floor(Math.random() * items.length)];
 }
 
-function blendWords(firstWord: string, secondWord: string) {
-  const first = titleCase(firstWord);
-  const second = titleCase(secondWord);
-  const joined = joinName(first, second);
-  const overlapped = first.endsWith(second.charAt(0))
-    ? `${first}${second.slice(1)}`
-    : joined;
-  const blends = [
-    joined,
-    overlapped,
-    withEnding(first, randomItem(["ly", "iq", "rix", "exa", "ora", "tix", "enix"])),
-    withEnding(second, randomItem(["flow", "mind", "nest", "spark", "nova", "zen"])),
-  ].filter((name) => name.length <= 12);
+function shuffle<T>(items: T[]) {
+  return [...items].sort(() => Math.random() - 0.5);
+}
 
-  return randomItem(blends.length > 0 ? blends : [withEnding(first, "ly")]);
+function blendWords(firstWord: string, secondWord: string, style: NamingStyle) {
+  const first = splitWord(firstWord);
+  const second = splitWord(secondWord);
+  const endings = styleParts[style];
+  const blends = [
+    `${titleCase(first.start)}${titleCase(second.shortEnd)}`,
+    `${titleCase(first.shortStart)}${titleCase(second.end)}`,
+    `${first.shortStart}${randomItem(endings)}`,
+    `${second.shortStart}${randomItem(endings)}`,
+    `${firstWord}${secondWord}`.slice(0, 12),
+  ];
+
+  return randomItem(blends);
 }
 
 function joinName(...parts: string[]) {
   return parts.filter(Boolean).map(titleCase).join("");
 }
 
-function withEnding(word: string, ending: string) {
-  const compactEnding = ["ly", "io", "ai", "iq", "rix", "exa", "ora", "tix", "enix", "mora"].includes(ending)
-    ? ending
-    : titleCase(ending);
+function pronounceableScore(name: string) {
+  const lowerName = name.toLowerCase();
+  const vowels = (lowerName.match(/[aeiouy]/g) ?? []).length;
+  const consonantClusters = (lowerName.match(/[bcdfghjklmnpqrstvwxyz]{4,}/g) ?? []).length;
 
-  return `${titleCase(word)}${compactEnding}`;
+  return vowels * 3 - consonantClusters * 12;
 }
 
 function hasAwkwardPattern(name: string) {
@@ -91,97 +126,105 @@ function hasAwkwardPattern(name: string) {
   const half = lowerName.slice(0, lowerName.length / 2);
   const repeatsItself = lowerName.length % 2 === 0 && half === lowerName.slice(lowerName.length / 2);
 
-  return repeatsItself || /([bcdfghjklmnpqrstvwxyz]{5,}|[aeiou]{4,}|(.)\2{3,})/i.test(name);
-}
-
-function cleanName(name: string) {
-  return name.replace(/[^a-zA-Z0-9]/g, "").replace(/\s+/g, "");
+  return repeatsItself || /([bcdfghjklmnpqrstvwxyz]{5,}|[aeiou]{4,}|(.)\2{2,})/i.test(name);
 }
 
 function normalizeName(name: string) {
-  const clean = cleanName(name);
+  const clean = name.replace(/[^a-zA-Z]/g, "");
 
   if (!clean) {
     return "";
   }
 
-  const wordBreaks = clean.replace(/([a-z])([A-Z])/g, "$1 $2").split(" ");
+  return clean
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .split(" ")
+    .map(titleCase)
+    .join("");
+}
 
-  return wordBreaks.map(titleCase).join("");
+function scoreName(name: string, categoryWords: string[]) {
+  let score = 50;
+  const lowerName = name.toLowerCase();
+  const genericWords = semanticBanks.general;
+
+  if (name.length >= 5 && name.length <= 10) score += 25;
+  if (name.length > 12) score -= 30;
+  if (categoryWords.some((word) => lowerName.includes(word.slice(0, 3)))) score += 26;
+  if (!categoryWords.some((word) => lowerName.includes(word.slice(0, 3)))) score -= 22;
+  if (genericWords.some((word) => lowerName === word || lowerName.startsWith(word))) score -= 10;
+  if (styleParts.emotional.some((word) => lowerName.includes(word))) score += 3;
+  if (styleParts.future.some((word) => lowerName.includes(word))) score += 6;
+  if (/(hub|base|works|company|pilot|spark|flow|lab)$/i.test(name)) score -= 18;
+  if (hasAwkwardPattern(name)) score -= 80;
+
+  return score + pronounceableScore(name) + Math.random() * 12;
 }
 
 function isGoodName(name: string) {
-  return name.length >= 4 && name.length <= 14 && !hasAwkwardPattern(name);
+  return name.length >= 4 && name.length <= 14 && !hasAwkwardPattern(name) && pronounceableScore(name) > -4;
 }
 
-function generateRandomCombination(words: string[], related: string[], style: NamingStyle) {
-  const primary = randomItem(words);
-  const secondary = randomItem([...words, ...related]);
-  const ending = randomItem(creativeEndings);
-  const prefix = randomItem(modernPrefixes);
-  const primaryRoot = splitWord(primary).shortStart;
+function generateCandidates(words: string[], semanticWords: string[]) {
+  const styles: NamingStyle[] = ["blend", "premium", "minimal", "future", "emotional", "playful", "startup"];
+  const candidates = new Set<string>();
 
-  if (style === "modern") {
-    return Math.random() > 0.45
-      ? withEnding(primaryRoot, randomItem(["nova", "mora", "exa", "ly"]))
-      : joinName(prefix, primary);
+  for (let index = 0; index < 160; index += 1) {
+    const style = randomItem(styles);
+    const first = randomItem(semanticWords);
+    const second = randomItem(shuffle([...words, ...semanticWords]).filter((word) => word !== first));
+    const part = randomItem(styleParts[style]);
+
+    if (style === "blend") candidates.add(blendWords(first, second, style));
+    if (style === "premium") candidates.add(joinName(first, part));
+    if (style === "minimal") candidates.add(joinName(first, second).slice(0, 10));
+    if (style === "future") candidates.add(Math.random() > 0.5 ? joinName(first, part) : blendWords(first, part, style));
+    if (style === "emotional") candidates.add(joinName(part, first).slice(0, 12));
+    if (style === "playful") candidates.add(blendWords(first, part, style));
+    if (style === "startup") candidates.add(joinName(splitWord(first).shortStart, part));
   }
 
-  if (style === "tech") {
-    return Math.random() > 0.45
-      ? withEnding(primaryRoot, randomItem(["ai", "io", "iq", "rix", "tix", "pulse"]))
-      : joinName(primary, randomItem(["Pilot", "Nexa", "Logic"]));
-  }
+  return Array.from(candidates);
+}
 
-  if (style === "premium") {
-    return Math.random() > 0.4 ? joinName(primary, randomItem(["Nova", "Zen", "Mora", "Luxe"])) : joinName(prefix, primary);
-  }
+function filterBestNames(candidates: string[], semanticWords: string[]) {
+  const rankedNames = candidates
+    .map(normalizeName)
+    .filter(isGoodName)
+    .filter((name, index, names) => names.indexOf(name) === index)
+    .map((name) => ({ name, score: scoreName(name, semanticWords) }))
+    .sort((first, second) => second.score - first.score)
+    .map(({ name }) => name);
+  const chosenNames: string[] = [];
+  const rootCounts: Record<string, number> = {};
 
-  if (style === "playful") {
-    return Math.random() > 0.5
-      ? withEnding(randomItem([...related, primary]), randomItem(["ly", "fox", "vibe", "spark"]))
-      : joinName(randomItem([...related, primary]), randomItem(["Nest", "Paw", "Flow"]));
-  }
+  rankedNames.forEach((name) => {
+    const root = name.slice(0, 4).toLowerCase();
 
-  return Math.random() > 0.5
-    ? blendWords(primary, randomItem([...related, secondary]))
-    : withEnding(primary, ending);
+    if (chosenNames.length < 12 && (rootCounts[root] ?? 0) < 2) {
+      chosenNames.push(name);
+      rootCounts[root] = (rootCounts[root] ?? 0) + 1;
+    }
+  });
+
+  rankedNames.forEach((name) => {
+    if (chosenNames.length < 12 && !chosenNames.includes(name)) {
+      chosenNames.push(name);
+    }
+  });
+
+  return chosenNames.slice(0, 12);
 }
 
 function createNameIdeas(keywords: string[]) {
   const words = cleanKeywords(keywords);
-  const related = words.flatMap((word) => relatedWords[word.toLowerCase()] ?? []);
-  const stemmedWords = words.map((word) => stems[word.toLowerCase()] ?? word);
-  const brandWords = [...new Set([...stemmedWords, ...related])];
-  const baseWords = brandWords.length > 0 ? brandWords : ["Name"];
-  const styles: NamingStyle[] = ["modern", "tech", "premium", "playful", "minimal"];
-  const ideas: string[] = [];
+  const category = detectCategory(words);
+  const categoryWords = Array.from(new Set([...words.map((word) => stemMap[word] ?? word), ...semanticBanks[category]]));
+  const semanticWords = getSemanticWords(category, words);
+  const candidates = generateCandidates(words, semanticWords);
+  const bestNames = filterBestNames(candidates, categoryWords);
 
-  function addIdea(name: string) {
-    const cleanIdea = normalizeName(name);
-
-    if (isGoodName(cleanIdea) && !ideas.includes(cleanIdea)) {
-      ideas.push(cleanIdea);
-    }
-  }
-
-  baseWords.forEach((word, index) => {
-    const nextWord = baseWords[(index + 1) % baseWords.length] ?? word;
-
-    addIdea(withEnding(word, randomItem(["ly", "nova", "zen", "spark", "mind", "enix"])));
-    addIdea(joinName(word, randomItem(related.length > 0 ? related : baseWords)));
-    addIdea(blendWords(word, nextWord));
-  });
-
-  for (let index = 0; index < 80 && ideas.length < 12; index += 1) {
-    addIdea(generateRandomCombination(baseWords, related, randomItem(styles)));
-  }
-
-  for (let index = 0; index < creativeEndings.length && ideas.length < 12; index += 1) {
-    addIdea(withEnding(baseWords[index % baseWords.length], creativeEndings[index]));
-  }
-
-  return ideas.slice(0, 12);
+  return shuffle(bestNames).slice(0, 12);
 }
 
 export default function Home() {
