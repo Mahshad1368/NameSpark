@@ -222,6 +222,13 @@ export default function Home() {
     setIdeas(createNameIdeas(keywords));
   }
 
+  function resetSession() {
+    setInput("");
+    setKeywords([]);
+    setIdeas([]);
+    setError("");
+  }
+
   return (
     <main className="flex min-h-screen items-start justify-center bg-[#050806] px-4 py-12 sm:py-16">
       <div className="w-full max-w-lg rounded-2xl border border-[#1f3528] bg-[#0b0f0d] p-6 shadow-[0_22px_70px_rgba(56,255,145,0.12)] sm:p-8">
@@ -265,13 +272,22 @@ export default function Home() {
           </div>
         )}
 
-        <button
-          type="button"
-          onClick={generateIdeas}
-          className="mt-7 w-full rounded-xl bg-[#5cff9d] px-4 py-3 text-base font-semibold text-[#061008] shadow-[0_10px_30px_rgba(92,255,157,0.2)] hover:bg-[#9affc1] focus:outline-none focus:ring-4 focus:ring-[#5cff9d]/20"
-        >
-          Generate
-        </button>
+        <div className="mt-7 flex gap-3">
+          <button
+            type="button"
+            onClick={generateIdeas}
+            className="flex-1 rounded-xl bg-[#5cff9d] px-4 py-3 text-base font-semibold text-[#061008] shadow-[0_10px_30px_rgba(92,255,157,0.2)] hover:bg-[#9affc1] focus:outline-none focus:ring-4 focus:ring-[#5cff9d]/20"
+          >
+            Generate
+          </button>
+          <button
+            type="button"
+            onClick={resetSession}
+            className="rounded-xl border border-[#385542] bg-[#101712] px-4 py-3 text-sm font-semibold text-[#b9f6cc] hover:border-[#5cff9d] hover:bg-[#142218] focus:outline-none focus:ring-4 focus:ring-[#5cff9d]/10"
+          >
+            Reset
+          </button>
+        </div>
 
         {error && <p className="mt-4 text-sm font-medium text-[#ff8c8c]">{error}</p>}
 
