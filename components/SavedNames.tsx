@@ -7,7 +7,7 @@ type SavedNamesProps = {
 
 export function SavedNames({ names, onRemove }: SavedNamesProps) {
   return (
-    <aside className="rounded-lg border border-black/10 bg-white/78 p-4 shadow-soft backdrop-blur dark:border-white/10 dark:bg-white/[0.06] sm:p-6 lg:sticky lg:top-4 lg:self-start">
+    <aside className="rounded-lg border border-black/10 bg-white/82 p-4 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.07] sm:p-6 lg:sticky lg:top-4 lg:self-start">
       <div className="mb-5">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-basil dark:text-citron">
           Shortlist
@@ -26,7 +26,7 @@ export function SavedNames({ names, onRemove }: SavedNamesProps) {
           {names.map((idea) => (
             <div
               key={idea.name}
-              className="rounded-lg border border-black/10 bg-white p-3 dark:border-white/10 dark:bg-black/15"
+              className="rounded-lg border border-black/10 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:border-basil/30 hover:shadow-soft dark:border-white/10 dark:bg-black/15 dark:hover:border-citron/30"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>

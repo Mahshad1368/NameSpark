@@ -1,8 +1,8 @@
 export function Header() {
   return (
-    <header className="flex items-center justify-between rounded-lg border border-black/10 bg-white/70 px-4 py-3 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.05] sm:px-5">
+    <header className="flex items-center justify-between rounded-lg border border-black/10 bg-white/76 px-4 py-3 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06] sm:px-5">
       <div className="flex items-center gap-3">
-        <div className="grid size-10 place-items-center rounded-lg bg-ink text-lg font-black text-citron dark:bg-citron dark:text-ink">
+        <div className="grid size-10 place-items-center rounded-lg bg-ink text-lg font-black text-citron shadow-sm dark:bg-citron dark:text-ink">
           N
         </div>
         <div>
@@ -16,7 +16,7 @@ export function Header() {
       </div>
       <a
         href="#generator"
-        className="rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-basil focus:outline-none focus:ring-2 focus:ring-ember focus:ring-offset-2 dark:bg-white dark:text-ink dark:hover:bg-citron dark:focus:ring-offset-ink"
+        className="rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-basil hover:shadow-glow focus:outline-none focus:ring-2 focus:ring-ember focus:ring-offset-2 dark:bg-white dark:text-ink dark:hover:bg-citron dark:focus:ring-offset-ink"
       >
         Start
       </a>
